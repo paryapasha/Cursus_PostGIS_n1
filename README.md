@@ -110,11 +110,29 @@ WHERE a.municipality LIKE 'MATOSINHOS';
 ```
 Note that under the ``` FROM ``` clause we add the ```AS a ```, which is saying that on what this particular query concerns, the table we are calling will be known as 'a' and that is why you see an ```a. ``` prefix whenever the query is referring to rows or attributes that belong to table a. Alias are very useful if your query is calling more than one table as you will soon see. 
 
+**Example 7 - Aggregates**
+
+Aggregate functions return a derived value for a group of records. This can be the count, the MIN/MAX/AVG value, or more sphisticated statistical derivities per group! A very common simple example is "how many of something are there"
+
+Let us check how many neighborhoods are there in the municipality of MATOSINHOS  .
+
+```sql
+SELECT count(*) 
+FROM  vectors.porto_neighborhood AS a
+WHERE a.municipality LIKE 'MATOSINHOS';
+```
+We can also see how many neighborhoods are there **per municipality**. For that we need to first GROUP our records, and then count the members of each group. We do it this way:
+
+```sql
+SELECT a.municipality, count(*) 
+FROM  vectors.porto_neighborhood AS a
+GROUP BY a.municipality ;
+```
 ----------
 
 ## Calling PostGIS spatial functions
 
-**Example 7 - ST_Area**
+**Example 8 - ST_Area**
 
 Apart from the geometry columns, so far we have only been doing plain PostgreSQL. We will now start to explore some of the spatial functions offered by PostGIS. A PostGIS function usually takes the form ``` NameOfTheFunction(arguments/inputs) ``` Usually spatial function on PostGIS start with **ST_** To demonstrate this principle we will do a simple area calculation. In this example the area will be in meters because the SRID is in meters.:
 
@@ -125,7 +143,7 @@ WHERE a.municipality = 'MATOSINHOS';
 ```
 As you can see, the function **ST_Area** takes one argument - the geometry .
 
-**Example 8 - ST_Buffer**
+**Example 9 - ST_Buffer**
 
 Here is another example. This time we call a function that outputs a geometry.
 
@@ -135,7 +153,7 @@ FROM vectors.railroad;
 ```
 
 
-**Example 9 - ST_Intersects**
+**Example 10 - ST_Intersects**
 
 A common spatial problem in GIS is to know if two features share space. There are some variants to this problem but we can use the following as a starting point:
 
@@ -146,7 +164,7 @@ WHERE a.municipality ilike 'MATOSINHOS' AND ST_Intersects(a.geom,b.geom);
 ```
 If you load the results in QGIS, the result might no be exactly what you were expecting - you will get the railroad that intersects the neighborhood of Muro but it is not clipped to the boundaries of the neighborhood because this query only applies a logical test, it does not construct a new geometry. In other words, it returns the features that intersect neighborhood of Muro without changing them.
 
-**Example 10 - ST_Intersection**
+**Example 11 - ST_Intersection**
 
 To get the actual geometry that represents the space shared by two geometries (like a Clip operation), we have to use the **ST_Intersection** function. In this example we will get the railroads that intersect Matosinhos neighborhood.
 
@@ -176,7 +194,7 @@ If you manged to solve it, try it with a small variation:
 
 ## Working with dynamic data: views and triggers
 
-**Example 11 - Create a view**
+**Example 12 - Create a view**
 
 Views are essentially a stored query, which means you can visualize the result of a query at anytime you want without having to type the query again. This is especially useful for complex queries that have to be run frequently over data that is very dynamic (i.e. changes frequently).
 
@@ -199,7 +217,7 @@ Although not entirely, for the most part PostGIS complies with the OGC Simple Fe
 
 Since PostGIS version 2.0 there are functions to detect and repair invalid geometries.
 
-**Example 12 - ST_IsValid**
+**Example 13 - ST_IsValid**
 
  In order to find invalid geometries we can use ```ST_IsValid``` function.
 
@@ -209,7 +227,7 @@ FROM  vectors.porto_neighborhood AS a
 WHERE NOT ST_IsValid(a.geom);
 ```
 
-**Example 13 -  Simple approach to fix invalid geometries**
+**Example 14 -  Simple approach to fix invalid geometries**
 
 ```ST_makevalid``` is the function that returns a corrected geometry. 
 
@@ -220,7 +238,7 @@ FROM vectors.porto_neighborhood
 WHERE NOT ST_IsValid(geom);
 ```
 
-**Example 14 - A better, more complete, approach to fix invalid polygons**.
+**Example 15 - A better, more complete, approach to fix invalid polygons**.
 
 Although the previous example works well most of the times, in some cases polygons or multipolygons ```ST_makeValid``` might return points or lines. A solution for this is to use a buffer of 0 meters: 
 
@@ -232,7 +250,7 @@ FROM vectors.porto_neighborhood
 WHERE NOT ST_IsValid(geom);
 ```
 
-**Example 15 - And in case of multipolygons...**
+**Example 16 - And in case of multipolygons...**
 
 Because ST_buffer returns a single polygon geometry, if we have a table of multipolygons we need to apply **ST_multi** function. This function transforms any single geometry into a MULTI* geometry. In this example, instead of creating a new table we will replace the invalid polygons by valid ones, using an UPDATE TABLE.
 
@@ -246,7 +264,7 @@ WHERE NOT ST_IsValid(geom);
 Triggers execute a given task whenever a specific event occurs in the database. This event can be anything that changes the state of your database - an insertion, a drop, an update. They are extremely useful not only to automate tasks but also to minimize the number of interactions between the users and the database (the source of many errors...). 
 One useful and important example is a trigger that automatically fixes invalid geometries when a new row/feature is added to the table.
 
-**Example 16 - Create a trigger that fixes invalid multipolygon geometries in real time.**
+**Example 17 - Create a trigger that fixes invalid multipolygon geometries in real time.**
 
 ```sql
  -- First lets add function INVALID()
