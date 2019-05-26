@@ -1,4 +1,4 @@
-# **Workshop PostGIS Vector**
+# **Training PostgeSQL+ PostGIS L1**
 
 ### This workshop aims to initialize the user in PostGIS using only vector data.
 
