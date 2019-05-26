@@ -28,7 +28,7 @@ We also recommend a look at PostGIS FAQ:
 
 Assuming you are not accessing an already configured version of the database used in this workshop, you will start by creating a new empty database in your system, after which you will create the postgis extension and then import the following shapefiles: *porto_neighborhood* ; *railroads* and *places*
 
-As an alternative you can restore the *postgis_vectors.backup* database from this repository, this DB already as all the vectors imported.
+As an easier alternative you can restore the *postgis_vectors.backup* database from this repository, this DB already as all the vectors imported.
 
 ----------
 
@@ -69,7 +69,7 @@ WHERE municipality = 'MATOSINHOS';
 
 **Example 3 - Ilike**
 
-The following query will return the same result as the previous one, but by using  ```ilike``` instead of the ```=``` operator the string matching becomes case UNsensitive:
+The following query will return the same result as the previous one, but by using  ```ilike``` instead of the ```=``` operator the string matching becomes case INsensitive:
 
 ```sql 
 SELECT * 
@@ -77,11 +77,17 @@ FROM  vectors.porto_neighborhood
 WHERE municipality ILIKE 'mAtOsInHoS';
 ```
 **Example 4 - Like**
-Like on the other hand is case sensitive therefore the following query will give zero results.
+LIKE on the other hand is case sensitive therefore the following query will give zero results.
 ```sql
 SELECT * 
 FROM  vectors.porto_neighborhood
 WHERE municipality LIKE 'Matosinhos';
+```
+You can also use the LIKE operator for partial string matching. For instance, you can find all the municipalities that their name starts with "MA" by tweaking the previous query as follows: 
+```sql
+SELECT * 
+FROM  vectors.porto_neighborhood
+WHERE municipality LIKE 'MA%';
 ```
 **Example 5 - Selecting attributes in a query**
 
