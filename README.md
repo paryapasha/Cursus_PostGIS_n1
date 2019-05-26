@@ -26,7 +26,7 @@ We also recommend a look at PostGIS FAQ:
 
 ## Load data into the database
 
-Assuming you are not accessing an already configured version of the database used in this workshop, you will start by creating a new empty database in your system, after which you will create the postgis extension and then import the following shapefiles: *porto_freguesias* ; *ferrovias* and *lugares*
+Assuming you are not accessing an already configured version of the database used in this workshop, you will start by creating a new empty database in your system, after which you will create the postgis extension and then import the following shapefiles: *porto_neighborhood* ; *railroads* and *places*
 
 As an alternative you can restore the *postgis_vectors.backup* database from this repository, this DB already as all the vectors imported.
 
@@ -43,19 +43,7 @@ Please use your QGIS DB Manager to explore the vectors inside the schema vectors
 
 From now on we assume QGIS is your client application.
 
-If you are a non-Portuguese speaker, here is a quick explanation of the attributes and table names you may see as you follow the workshop:
-
-Freguesia = Parish
-
-Concelho = Municipality
-
-Distrito = District/region
-
-Ferrovia = Railroad
-
-Lugares = Places
-
-Therefore the table ```vectors.porto_freguesias``` has all the parishes that exist in the district of Porto, Portugal.
+Remember, ```vectors.porto_neighborhood``` has all the neighborhoods that exist in the district of Porto, Portugal.
 
 ----------
 
@@ -67,16 +55,16 @@ This simplest type of query returns all the records and all the attributes of a 
 
 ```sql 
 SELECT * 
-FROM  vectors.porto_freguesias;
+FROM  vectors.porto_neighborhood;
 ```
 **Example 2 - Condition**
 
-Most of the time you don't want the whole table, you just want the rows that meet certain criteria. The next query will return all the attributes but only for the parishes that belong to the municipality of Matosinhos:
+Most of the time you don't want the whole table, you just want the rows that meet certain criteria. The next query will return all the attributes but only for the neighborhoods that belong to the municipality of Matosinhos:
 
 ```sql 
 SELECT * 
-FROM  vectors.porto_freguesias
-WHERE concelho = 'MATOSINHOS';
+FROM  vectors.porto_neighborhood
+WHERE municipality = 'MATOSINHOS';
 ```
 
 **Example 3 - Ilike**
@@ -85,33 +73,33 @@ The following query will return the same result as the previous one, but by usin
 
 ```sql 
 SELECT * 
-FROM  vectors.porto_freguesias
-WHERE concelho ILIKE 'mAtOsInHoS';
+FROM  vectors.porto_neighborhood
+WHERE municipality ILIKE 'mAtOsInHoS';
 ```
 **Example 4 - Like**
 Like on the other hand is case sensitive therefore the following query will give zero results.
 ```sql
 SELECT * 
-FROM  vectors.porto_freguesias
-WHERE concelho LIKE 'Matosinhos';
+FROM  vectors.porto_neighborhood
+WHERE municipality LIKE 'Matosinhos';
 ```
 **Example 5 - Selecting attributes in a query**
 
-You may want to have your query returning specific attributes instead of all of them  (the ```*``` sign) as we have been doing. In the example below we are still getting all the parishes that belong to the municipality of Matosinhos, but we are only interested in knowing a few facts (attributes) about them:
+You may want to have your query returning specific attributes instead of all of them  (the ```*``` sign) as we have been doing. In the example below we are still getting all the neighborhoods that belong to the municipality of Matosinhos, but we are only interested in knowing a few facts (attributes) about them:
 
 ```sql
-SELECT freguesia, area_ha 
-FROM  vectors.porto_freguesias
-WHERE concelho LIKE 'MATOSINHOS';
+SELECT neighborhood, area_ha 
+FROM  vectors.porto_neighborhood
+WHERE municipality LIKE 'MATOSINHOS';
 ```
 **Example 6 - Using alias**
 
 Alias are a very common way of expressing a query. An alias consists on renaming a table on the fly as in the example below:
 
 ```sql
-SELECT a.freguesia, a.area_ha 
-FROM  vectors.porto_freguesias AS a
-WHERE a.concelho LIKE 'MATOSINHOS';
+SELECT a.neighborhood, a.area_ha 
+FROM  vectors.porto_neighborhood AS a
+WHERE a.municipality LIKE 'MATOSINHOS';
 ```
 Note that under the ``` FROM ``` clause we add the ```AS a ```, which is saying that on what this particular query concerns, the table we are calling will be known as 'a' and that is why you see an ```a. ``` prefix whenever the query is referring to rows or attributes that belong to table a. Alias are very useful if your query is calling more than one table as you will soon see. 
 
@@ -124,9 +112,9 @@ Note that under the ``` FROM ``` clause we add the ```AS a ```, which is saying 
 Apart from the geometry columns, so far we have only been doing plain PostgreSQL. We will now start to explore some of the spatial functions offered by PostGIS. A PostGIS function usually takes the form ``` NameOfTheFunction(arguments/inputs) ``` Usually spatial function on PostGIS start with **ST_** To demonstrate this principle we will do a simple area calculation. In this example the area will be in meters because the SRID is in meters.:
 
 ```sql
-SELECT a.freguesia, a.area_ha, ST_Area(a.geom)--/10000)::int
-FROM  vectors.porto_freguesias AS a
-WHERE a.concelho = 'MATOSINHOS';
+SELECT a.neighborhood, a.area_ha, ST_Area(a.geom)--/10000)::int
+FROM  vectors.porto_neighborhood AS a
+WHERE a.municipality = 'MATOSINHOS';
 ```
 As you can see, the function **ST_Area** takes one argument - the geometry .
 
@@ -136,7 +124,7 @@ Here is another example. This time we call a function that outputs a geometry.
 
 ```'sql
 SELECT id, ST_Buffer(geom, 1000)
-FROM vectors.ferrovia;
+FROM vectors.railroad;
 ```
 
 
@@ -146,19 +134,19 @@ A common spatial problem in GIS is to know if two features share space. There ar
 
 ```sql
 SELECT b.geom, b.id
-FROM vectors.porto_freguesias as a, vectors.ferrovia as b
-WHERE a.concelho ilike 'MATOSINHOS' AND ST_Intersects(a.geom,b.geom);
+FROM vectors.porto_neighborhood as a, vectors.railroad as b
+WHERE a.municipality ilike 'MATOSINHOS' AND ST_Intersects(a.geom,b.geom);
 ```
-If you load the results in QGIS, the result might no be exactly what you were expecting - you will get the railroad that intersects the parish of Muro but it is not clipped to the boundaries of the parish because this query only applies a logical test, it does not construct a new geometry. In other words, it returns the features that intersect parish of Muro without changing them.
+If you load the results in QGIS, the result might no be exactly what you were expecting - you will get the railroad that intersects the neighborhood of Muro but it is not clipped to the boundaries of the neighborhood because this query only applies a logical test, it does not construct a new geometry. In other words, it returns the features that intersect neighborhood of Muro without changing them.
 
 **Example 10 - ST_Intersection**
 
-To get the actual geometry that represents the space shared by two geometries (like a Clip operation), we have to use the **ST_Intersection** function. In this example we will get the railroads that intersect Matosinhos parish.
+To get the actual geometry that represents the space shared by two geometries (like a Clip operation), we have to use the **ST_Intersection** function. In this example we will get the railroads that intersect Matosinhos neighborhood.
 
 ```sql
 SELECT b.id, ST_Intersection(b.geom, a.geom) as geom
-FROM vectors.porto_freguesias as a, vectors.ferrovia as b
-WHERE a.concelho ilike 'MATOSINHOS' --AND ST_Intersects(a.geom,b.geom); 
+FROM vectors.porto_neighborhood as a, vectors.railroad as b
+WHERE a.municipality ilike 'MATOSINHOS' --AND ST_Intersects(a.geom,b.geom); 
 ```
 
 Run the above query again, but this time uncomment the ``` AND ST_intersects(a.geom,b.geom); ```  by deleting the ```--``` characters and check the consumed time. 
@@ -190,12 +178,12 @@ To explore this concept  we will create a view from the solution to the second i
 ```sql
 CREATE VIEW close2railroad AS
 SELECT a.name, a.geom
-FROM vectors.lugares as a, vectors.ferrovia as b, vectors.porto_freguesias as c
-WHERE st_intersects(a.geom, ST_Buffer(b.geom, 300)) and c.concelho ilike 'MATOSINHOS' and ST_Intersects(a.geom, c.geom);
+FROM vectors.places as a, vectors.railroad as b, vectors.porto_neighborhood as c
+WHERE st_intersects(a.geom, ST_Buffer(b.geom, 300)) and c.municipality ilike 'MATOSINHOS' and ST_Intersects(a.geom, c.geom);
 ```
 You can now load your view into QGIS just like you would any other table. The interesting part however is that if the data behind the query changes, the view will also change accordingly.
 
-Example: lets assume the table lugares is changing frequently. If new points are created closer than 300m to railroad in the municipality of Matosinhos, the view will show those new points without you having to re-run the query!
+Example: lets assume the table places is changing frequently. If new points are created closer than 300m to railroad in the municipality of Matosinhos, the view will show those new points without you having to re-run the query!
 
 
 ### Dealing with invalid geometries
@@ -209,8 +197,8 @@ Since PostGIS version 2.0 there are functions to detect and repair invalid geome
  In order to find invalid geometries we can use ```ST_IsValid``` function.
 
 ```sql
-SELECT a.freguesia, a.area_ha, a.geom
-FROM  vectors.porto_freguesias AS a
+SELECT a.neighborhood, a.area_ha, a.geom
+FROM  vectors.porto_neighborhood AS a
 WHERE NOT ST_IsValid(a.geom);
 ```
 
@@ -219,9 +207,9 @@ WHERE NOT ST_IsValid(a.geom);
 ```ST_makevalid``` is the function that returns a corrected geometry. 
 
 ```sql
-CREATE TABLE my_freguesias AS
+CREATE TABLE my_neighborhood AS
 SELECT id, name, ST_buffer((ST_makevalid(geom)),0)) as geom
-FROM vectors.porto_freguesias
+FROM vectors.porto_neighborhood
 WHERE NOT ST_IsValid(geom);
 ```
 
@@ -230,10 +218,10 @@ WHERE NOT ST_IsValid(geom);
 Although the previous example works well most of the times, in some cases polygons or multipolygons ```ST_makeValid``` might return points or lines. A solution for this is to use a buffer of 0 meters: 
 
 ```sql
-DROP TABLE IF EXISTS my_freguesias;
-CREATE TABLE my_freguesias AS
+DROP TABLE IF EXISTS my_neighborhood;
+CREATE TABLE my_neighborhood AS
 SELECT id, name, ST_buffer((ST_makevalid(geom)),0)) as geom
-FROM vectors.porto_freguesias
+FROM vectors.porto_neighborhood
 WHERE NOT ST_IsValid(geom);
 ```
 
@@ -242,7 +230,7 @@ WHERE NOT ST_IsValid(geom);
 Because ST_buffer returns a single polygon geometry, if we have a table of multipolygons we need to apply **ST_multi** function. This function transforms any single geometry into a MULTI* geometry. In this example, instead of creating a new table we will replace the invalid polygons by valid ones, using an UPDATE TABLE.
 
 ```sql
-UPDATE vectors.porto_freguesias
+UPDATE vectors.porto_neighborhood
 SET geom=(ST_multi(ST_buffer((ST_makevalid(geom)),0)))
 WHERE NOT ST_IsValid(geom);
 ```
@@ -274,9 +262,9 @@ $BODY$
 
 -- Now lets add trigger INVALID on our table 
 
-DROP TRIGGER IF EXISTS trg_c_invalid ON vectors.porto_freguesias;
+DROP TRIGGER IF EXISTS trg_c_invalid ON vectors.porto_neighborhood;
 CREATE TRIGGER trg_c_invalid BEFORE INSERT OR UPDATE
-ON vectors.porto_freguesias FOR EACH ROW EXECUTE PROCEDURE invalid();
+ON vectors.porto_neighborhood FOR EACH ROW EXECUTE PROCEDURE invalid();
 ```
 Triggers are very important in production databases, but they can be quite complex. For more information about triggers please check the official documentation:
 [https://www.postgresql.org/docs/current/static/plpgsql-trigger.html](https://www.postgresql.org/docs/current/static/plpgsql-trigger.html)
@@ -287,11 +275,11 @@ Triggers are very important in production databases, but they can be quite compl
 
 ```sql
 SELECT a.name, a.geom
-FROM vectors.lugares AS a, vectors.ferrovia AS b
+FROM vectors.places AS a, vectors.railroad AS b
 WHERE st_intersects(a.geom, ST_Buffer(b.geom, 300));
 ```
 ```sql
 SELECT a.name, a.geom
-FROM vectors.lugares AS a, vectors.ferrovia AS b, vectors.porto_freguesias AS c
-WHERE st_intersects(a.geom, ST_Buffer(b.geom, 300)) AND c.concelho LIKE 'MATOSINHOS' AND ST_Intersects(a.geom, c.geom);
+FROM vectors.places AS a, vectors.railroad AS b, vectors.porto_neighborhood AS c
+WHERE st_intersects(a.geom, ST_Buffer(b.geom, 300)) AND c.municipality LIKE 'MATOSINHOS' AND ST_Intersects(a.geom, c.geom);
 ```
