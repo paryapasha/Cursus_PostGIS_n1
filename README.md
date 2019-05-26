@@ -77,6 +77,7 @@ FROM  vectors.porto_neighborhood
 WHERE municipality ILIKE 'mAtOsInHoS';
 ```
 **Example 4 - Like**
+
 LIKE on the other hand is case sensitive therefore the following query will give zero results.
 ```sql
 SELECT * 
