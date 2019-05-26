@@ -110,7 +110,7 @@ WHERE a.municipality LIKE 'MATOSINHOS';
 ```
 Note that under the ``` FROM ``` clause we add the ```AS a ```, which is saying that on what this particular query concerns, the table we are calling will be known as 'a' and that is why you see an ```a. ``` prefix whenever the query is referring to rows or attributes that belong to table a. Alias are very useful if your query is calling more than one table as you will soon see. 
 
-**Example 7 - Aggregates**
+**Example 7 - Summary queries**
 
 Aggregate functions return a derived value for a group of records. This can be the count, the MIN/MAX/AVG value, or more sphisticated statistical derivities per group! A very common simple example is "how many of something are there"
 
