@@ -233,7 +233,7 @@ WHERE NOT ST_IsValid(a.geom);
 
 ```sql
 CREATE TABLE my_neighborhood AS
-SELECT id, name, ST_buffer((ST_makevalid(geom)),0)) as geom
+SELECT id, name, ST_makevalid(geom) as geom
 FROM vectors.porto_neighborhood
 WHERE NOT ST_IsValid(geom);
 ```
